@@ -38,6 +38,191 @@ body {
 body.font-xl  { font-size: 22px; }
 body.font-xxl { font-size: 26px; }
 
+/* ─── 사이트 테마 — 원본 사이트 디자인 계승 ────────────────────────────────── */
+:root {
+  --site-primary:  #3B5AC6;   /* 기본값: SlowBro 블루 */
+  --site-accent:   #3B5AC6;
+  --site-bg:       #FAFAF8;
+}
+
+body.site-themed {
+  background: var(--site-bg);
+}
+
+/* 테마가 적용된 상단 바 */
+body.site-themed .topbar {
+  background: var(--site-primary);
+  border-bottom-color: var(--site-accent);
+}
+body.site-themed .topbar-logo { color: white; }
+body.site-themed .url-input   { border-color: rgba(255,255,255,0.3); color: #333; }
+body.site-themed .url-input:focus { border-color: var(--site-accent); }
+body.site-themed .btn-go      { background: var(--site-accent); }
+body.site-themed .btn-icon    { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); color: white; }
+body.site-themed .btn-icon:hover { background: rgba(255,255,255,0.22); }
+body.site-themed .mode-toggle { background: rgba(255,255,255,0.15); }
+body.site-themed .mode-btn    { color: rgba(255,255,255,0.65); }
+body.site-themed .mode-btn:hover { color: white; }
+body.site-themed .mode-btn--active,
+body.site-themed .mode-btn--orig-active {
+  background: rgba(255,255,255,0.22);
+  color: white;
+  box-shadow: none;
+}
+
+/* SlowBro 뱃지 (테마 모드에서 원본 로고 옆에 표시) */
+.sb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* 스텝 카드 — 상단에 사이트 색 헤더 바 */
+.step-card-header {
+  background: var(--site-primary);
+  color: white;
+  margin: -28px -28px 24px;
+  padding: 16px 28px;
+  border-radius: 16px 16px 0 0;
+}
+.step-card-header .step-num-tag {
+  font-size: 0.7em;
+  opacity: 0.65;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.step-card-header .step-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* 테마 모드: 선택 버튼 컬러 오버라이드 */
+body.site-themed .option-btn:hover {
+  border-color: var(--site-primary);
+  background: color-mix(in srgb, var(--site-primary) 8%, white);
+}
+body.site-themed .option-btn.selected {
+  border-color: var(--site-primary);
+  background: color-mix(in srgb, var(--site-primary) 10%, white);
+  color: var(--site-primary);
+}
+body.site-themed .btn-next    { background: var(--site-accent); }
+body.site-themed .btn-submit  { background: var(--site-accent); }
+body.site-themed .progress-dot.active { background: var(--site-accent); }
+body.site-themed .progress-dot.done   { background: var(--site-primary); }
+body.site-themed .counter-value       { color: var(--site-primary); }
+body.site-themed .counter-btn:hover   { border-color: var(--site-primary); }
+
+/* 하단 바도 테마에 맞게 */
+body.site-themed .bottom-bar {
+  background: color-mix(in srgb, var(--site-primary) 6%, white);
+  border-top-color: color-mix(in srgb, var(--site-primary) 20%, transparent);
+}
+
+/* ─── 모드 토글 ──────────────────────────────────────────────────────────────── */
+.mode-toggle {
+  display: flex;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+}
+.mode-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text-sub);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.mode-btn:hover { color: var(--text); }
+.mode-btn--active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.mode-btn--orig-active {
+  background: white;
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+/* ─── 원본 브라우저 네비게이션 바 ────────────────────────────────────────────── */
+.browser-navbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #f8f8f6;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+.bv-btn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.bv-btn:hover { background: var(--bg3); }
+.bv-btn:disabled { opacity: 0.35; cursor: default; }
+.bv-url-display {
+  flex: 1;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bv-loading {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: none;
+}
+.bv-loading.spin {
+  display: block;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 원본 모드일 때 SlowBro 콘텐츠 숨기기 — BrowserView가 그 자리를 채움 */
+#app.browser-mode #content-area { display: none; }
+#app.browser-mode .bottom-bar   { display: none; }
+
 /* ─── 상단 네비게이션 ────────────────────────────────────────────────────────── */
 .topbar {
   display: flex;
@@ -201,13 +386,6 @@ body.font-xxl { font-size: 26px; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.step-label {
-  font-size: 1.3em;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--text);
 }
 
 .step-hint {

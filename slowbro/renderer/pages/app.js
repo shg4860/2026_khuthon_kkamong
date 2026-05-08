@@ -3,25 +3,83 @@
 // slowbro API는 preload에서 window.slowbro 로 주입됨
 const api = window.slowbro
 
+// ─── 🐢 거북이 아이콘 생성 ────────────────────────────────────────────────────
+;(function applyTurtleIcon() {
+  const size = 256
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')
+
+  // 배경 원 (SlowBro 블루)
+  ctx.fillStyle = '#3B5AC6'
+  ctx.beginPath()
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+  ctx.fill()
+
+  // 거북이 이모지
+  ctx.font = `${Math.round(size * 0.65)}px serif`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('🐢', size / 2, size / 2 + size * 0.04)
+
+  api.setIcon(canvas.toDataURL('image/png'))
+})()
+
 // ─── 상태 ────────────────────────────────────────────────────────────────────
 const state = {
-  steps:       [],       // 현재 플로우의 전체 스텝
-  currentStep: 0,        // 현재 스텝 인덱스
-  answers:     {},       // { stepId: value }
+  steps:       [],
+  currentStep: 0,
+  answers:     {},
   sessionId:   `sess_${Date.now()}`,
   userId:      'demo_user',
   ttsEnabled:  true,
-  fontLevel:   0,        // 0, 1, 2
+  fontLevel:   0,
+  browserMode: false,    // true = 원본 사이트 BrowserView 표시 중
 }
 
 // ─── DOM 참조 ─────────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id)
 
-const homeScreen  = $('home-screen')
-const guideScreen = $('guide-screen')
-const doneScreen  = $('done-screen')
+const homeScreen   = $('home-screen')
+const guideScreen  = $('guide-screen')
+const doneScreen   = $('done-screen')
 const guideContent = $('guide-content')
-const urlInput    = $('url-input')
+const urlInput     = $('url-input')
+const browserNavbar = $('browser-navbar')
+const bvUrlDisplay  = $('bv-url-display')
+const bvLoading     = $('bv-loading')
+
+// ─── 사이트 테마 적용 ─────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  const root = document.documentElement
+  const logoText  = $('logo-text')
+  const logoBadge = $('logo-sb-badge')
+
+  if (!theme) {
+    document.body.classList.remove('site-themed')
+    root.style.removeProperty('--site-primary')
+    root.style.removeProperty('--site-accent')
+    root.style.removeProperty('--site-bg')
+    logoText.textContent = '🐢 SlowBro'
+    logoText.style.fontStyle  = 'normal'
+    logoText.style.fontWeight = '600'
+    logoText.style.color      = ''
+    logoBadge.classList.add('hidden')
+    return
+  }
+
+  root.style.setProperty('--site-primary', theme.primary)
+  root.style.setProperty('--site-accent',  theme.accent)
+  root.style.setProperty('--site-bg',      theme.bg)
+  document.body.classList.add('site-themed')
+
+  logoText.textContent      = theme.name
+  logoText.style.fontStyle  = theme.italic ? 'italic' : 'normal'
+  logoText.style.fontWeight = '900'
+  logoText.style.color      = 'white'
+  logoText.style.fontSize   = '22px'
+  logoBadge.classList.remove('hidden')
+}
 
 // ─── 화면 전환 ───────────────────────────────────────────────────────────────
 function showScreen(name) {
@@ -29,7 +87,78 @@ function showScreen(name) {
   guideScreen.classList.add('hidden')
   doneScreen.classList.add('hidden')
   $(`${name}-screen`).classList.remove('hidden')
+  if (name === 'home') applyTheme(null)
 }
+
+// ─── 모드 전환 ───────────────────────────────────────────────────────────────
+$('btn-mode-slow').addEventListener('click', () => switchMode('slow'))
+$('btn-mode-orig').addEventListener('click', () => switchMode('orig'))
+
+async function switchMode(mode) {
+  if (mode === 'orig' && !state.browserMode) {
+    state.browserMode = true
+    $('btn-mode-orig').classList.add('mode-btn--orig-active')
+    $('btn-mode-slow').classList.remove('mode-btn--active')
+    browserNavbar.classList.remove('hidden')
+    document.getElementById('app').classList.add('browser-mode')
+
+    const url = urlInput.value.trim() || 'https://www.naver.com'
+    urlInput.value = url
+    await openBrowserView(url)
+
+  } else if (mode === 'slow' && state.browserMode) {
+    state.browserMode = false
+    $('btn-mode-slow').classList.add('mode-btn--active')
+    $('btn-mode-orig').classList.remove('mode-btn--orig-active')
+    browserNavbar.classList.add('hidden')
+    document.getElementById('app').classList.remove('browser-mode')
+
+    await api.browser.close()
+  }
+}
+
+// BrowserView를 navbar 아래 ~ 창 하단까지 꽉 채우기
+function getBrowserBounds() {
+  const navbar = document.getElementById('browser-navbar').getBoundingClientRect()
+  const y = Math.round(navbar.bottom)
+  return {
+    x: 0,
+    y,
+    width:  Math.round(window.innerWidth),
+    height: Math.round(window.innerHeight) - y,
+  }
+}
+
+async function openBrowserView(url) {
+  // DOM 변경(navbar 표시) 후 레이아웃이 확정될 때까지 두 프레임 대기
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  await api.browser.open(url, getBrowserBounds())
+}
+
+// 창 크기 바뀌면 BrowserView 위치도 재조정
+window.addEventListener('resize', () => {
+  if (!state.browserMode) return
+  api.browser.setBounds(getBrowserBounds())
+})
+
+// BrowserView 이벤트 구독
+api.browser.onUrlChanged((url) => {
+  urlInput.value = url
+  bvUrlDisplay.textContent = url
+
+})
+api.browser.onTitleChanged((title) => {
+  document.title = `SlowBro — ${title}`
+})
+api.browser.onLoading((loading) => {
+  bvLoading.classList.toggle('spin', loading)
+  $('bv-reload').textContent = loading ? '✕' : '↻'
+})
+
+// 브라우저 네비게이션 버튼
+$('bv-back').addEventListener('click',    () => api.browser.back())
+$('bv-forward').addEventListener('click', () => api.browser.forward())
+$('bv-reload').addEventListener('click',  () => api.browser.reload())
 
 // ─── 네비게이션 ──────────────────────────────────────────────────────────────
 $('btn-go').addEventListener('click', () => navigate(urlInput.value.trim()))
@@ -108,6 +237,13 @@ async function navigate(url) {
   if (!url) return
   urlInput.value = url
 
+  // 원본 보기 모드 — BrowserView로 그냥 이동
+  if (state.browserMode) {
+    bvUrlDisplay.textContent = url
+    await api.browser.navigate(url)
+    return
+  }
+
   // 로딩 표시
   showScreen('guide')
   guideContent.innerHTML = `
@@ -135,6 +271,7 @@ async function navigate(url) {
   state.steps = data.steps
   state.currentStep = 0
   state.answers = {}
+  applyTheme(data.theme ?? null)
   speak(`${data.title ?? '예매'} 화면이에요. 차근차근 안내해 드릴게요.`)
   renderStep()
 }
@@ -183,7 +320,10 @@ function renderStep() {
   guideContent.innerHTML = `
     <div class="progress-bar">${dots}</div>
     <div class="step-card">
-      <div class="step-label">${step.label}</div>
+      <div class="step-card-header">
+        <div class="step-num-tag">STEP ${state.currentStep + 1} / ${state.steps.length}</div>
+        <div class="step-title">${step.label}</div>
+      </div>
       <div class="step-hint">${step.hint ?? ''}</div>
       ${bodyHTML}
       <div class="guard-warning" id="guard-warning">
@@ -272,6 +412,7 @@ function renderConfirm(step) {
 
 // ─── 이벤트 핸들러 연결 ──────────────────────────────────────────────────────
 function attachHandlers(step) {
+
   const next = $('btn-next')
 
   // 옵션 선택
@@ -360,7 +501,42 @@ function attachHandlers(step) {
 }
 
 // ─── 완료 ─────────────────────────────────────────────────────────────────────
-function finishFlow() {
+async function finishFlow() {
+  // 데모 서버에 예매 데이터 전송
+  const bookingResult = await api.submitBooking({
+    date:  state.answers.date  ?? state.answers.train ?? '-',
+    grade: state.answers.grade ?? state.answers.discount ?? '-',
+    count: state.answers.count ?? '2',
+  }).catch(() => null)
+
   showScreen('done')
+
+  const doneTitle = document.querySelector('.done-title')
+  const doneDesc  = document.querySelector('.done-desc')
+
+  if (bookingResult?.ok && bookingResult?.bookingId) {
+    if (doneTitle) doneTitle.textContent = '예매가 완료됐어요! 🎉'
+    if (doneDesc) doneDesc.innerHTML = `
+      예매 번호 <strong style="color:var(--site-accent,#3B5AC6)">${bookingResult.bookingId}</strong>
+      <br>
+      <span style="display:inline-block;margin-top:10px;font-size:14px;color:#666">
+        크롬에서 예매 내역 확인 →
+        <a href="#" id="link-bookings"
+           style="color:#3B5AC6;text-decoration:underline">
+          localhost:3000/bookings
+        </a>
+      </span>`
+    // 링크 클릭 → 외부 브라우저 열기
+    setTimeout(() => {
+      document.getElementById('link-bookings')?.addEventListener('click', (e) => {
+        e.preventDefault()
+        api.openExternal('http://localhost:3000/bookings')
+      })
+    }, 50)
+  } else {
+    if (doneTitle) doneTitle.textContent = '예매가 완료됐어요! 🎉'
+    if (doneDesc) doneDesc.textContent  = '잠시 후 확인 문자가 올 거예요'
+  }
+
   speak('예매가 완료됐어요! 잠시 후 확인 문자가 올 거예요.')
 }

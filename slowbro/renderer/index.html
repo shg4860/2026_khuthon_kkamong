@@ -12,13 +12,23 @@
   <div id="app">
     <!-- 상단 네비게이션 바 -->
     <header class="topbar">
-      <div class="topbar-logo">🐢 SlowBro</div>
+      <div class="topbar-logo">
+        <span id="logo-text">🐢 SlowBro</span>
+        <span id="logo-sb-badge" class="sb-badge hidden">🐢 SlowBro 모드</span>
+      </div>
+
+      <!-- 모드 토글 -->
+      <div class="mode-toggle">
+        <button id="btn-mode-slow"  class="mode-btn mode-btn--active">🐢 SlowBro</button>
+        <button id="btn-mode-orig"  class="mode-btn">🌐 원본 보기</button>
+      </div>
+
       <div class="topbar-url-area">
         <input
           id="url-input"
           class="url-input"
           type="text"
-          placeholder="mock://interpark/baseball  또는  mock://korail/ktx"
+          placeholder="mock://giants/baseball  |  mock://korail/ktx  |  https://..."
           spellcheck="false"
         />
         <button id="btn-go" class="btn-go">이동</button>
@@ -30,6 +40,15 @@
       </div>
     </header>
 
+    <!-- 원본 브라우저 네비게이션 바 (원본 모드일 때만 표시) -->
+    <div id="browser-navbar" class="browser-navbar hidden">
+      <button id="bv-back"    class="bv-btn" title="뒤로">←</button>
+      <button id="bv-forward" class="bv-btn" title="앞으로">→</button>
+      <button id="bv-reload"  class="bv-btn" title="새로고침">↻</button>
+      <div class="bv-url-display" id="bv-url-display">주소를 입력하세요</div>
+      <div class="bv-loading" id="bv-loading"></div>
+    </div>
+
     <!-- 메인 콘텐츠 영역 -->
     <main id="content-area">
       <!-- 홈 화면 -->
@@ -37,9 +56,13 @@
         <h1 class="home-title">천천히 해도 괜찮아요 🌿</h1>
         <p class="home-desc">아래 버튼을 누르면 예매를 도와드릴게요</p>
         <div class="quick-btns">
-          <button class="quick-btn quick-btn--baseball" data-url="mock://interpark/baseball">
+          <button class="quick-btn quick-btn--baseball" data-url="mock://giants/baseball">
             <span class="quick-icon">⚾</span>
-            <span class="quick-label">야구 티켓 예매</span>
+            <span class="quick-label">롯데 야구 예매</span>
+          </button>
+          <button class="quick-btn quick-btn--baseball" data-url="mock://interpark/baseball">
+            <span class="quick-icon">🎫</span>
+            <span class="quick-label">인터파크 예매</span>
           </button>
           <button class="quick-btn quick-btn--ktx" data-url="mock://korail/ktx">
             <span class="quick-icon">🚄</span>
